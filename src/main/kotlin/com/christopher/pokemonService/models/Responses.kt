@@ -11,3 +11,9 @@ data class BattleCompareRes (
     val attack: Battle,
     val defense: Battle
 )
+
+data class CommonMovesRes (
+    val firstPokemon: Pokemon,
+    val secondPokemon: Pokemon,
+    val moveList: List<String>
+)
