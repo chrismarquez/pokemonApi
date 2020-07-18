@@ -8,10 +8,12 @@ import io.ktor.server.netty.Netty
 
 const val PORT = 8080
 
-fun main() {
+fun main() = runApp()
+
+fun runApp(wait: Boolean = true) {
     println("Hello there! Ready and listening on port $PORT")
     val server = setupServer()
-    server.start(wait = true)
+    server.start(wait)
 }
 
 fun setupServer() = embeddedServer(Netty, port = PORT) {
