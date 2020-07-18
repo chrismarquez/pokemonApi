@@ -2,7 +2,7 @@
 #
 # Check https://circleci.com/docs/2.0/language-java/ for more details
 #
-version: 2
+version: 2.1
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.4
 jobs:
@@ -72,7 +72,7 @@ jobs:
           tag: $TAG
 
 workflows:
-  version: 2
+  version: 2.1
   build-push_image-deploy:
     jobs:
       - build:
