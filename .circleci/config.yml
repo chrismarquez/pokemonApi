@@ -66,8 +66,8 @@ jobs:
       # Update a deployment Docker image.
       - gcp-gke/rollout-image:
           cluster: cluster-1
-          deployment: pokemon-api-depl
-          container: pokemon-api
+          deployment: pokemon-api-deployment
+          container: pokemon-api-instance
           image: docker.io/chrismarquez/$IMAGE_NAME # change version when updating
           tag: $TAG
 
