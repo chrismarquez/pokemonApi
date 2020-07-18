@@ -3,6 +3,8 @@
 # Check https://circleci.com/docs/2.0/language-java/ for more details
 #
 version: 2
+orbs:
+  gcp-gke: circleci/gcp-gke@1.0.4
 jobs:
   build:
     docker:
@@ -25,7 +27,7 @@ jobs:
 
       # run tests!
       - run: ./gradlew test
-  deploy:
+  push_image:
     machine: true
     working_directory: ~/PokemonAPI
     environment:
@@ -50,17 +52,43 @@ jobs:
             docker build -t chrismarquez/$IMAGE_NAME:$TAG .
             echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
             docker push chrismarquez/$IMAGE_NAME:$TAG
+  deploy:
+    description: Deploy application to Google Kubernetes Engine
+    machine: true
+    steps:
+      - run:
+          name: Docker Hub Login
+          command: echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+      # Install `gcloud` and `kubectl` if not already installed.
+      - gcp-gke/install
+      # Initialize the `gcloud` CLI.
+      - gcp-gke/init
+      # Update a deployment Docker image.
+      - gcp-gke/rollout-image:
+          cluster: cluster-1
+          deployment: pokemon-api-depl
+          container: pokemon-api
+          image: docker.io/chrismarquez/$IMAGE_NAME # change version when updating
+          tag: $TAG
+
 workflows:
   version: 2
-  build-deploy:
+  build-push_image-deploy:
     jobs:
       - build:
           filters:
             branches:
               only: /.*/
-      - deploy:
+      - push_image:
           requires:
             - build
+          filters:
+            branches:
+              only:
+                - master
+      - deploy:
+          requires:
+            - push_image
           filters:
             branches:
               only:
