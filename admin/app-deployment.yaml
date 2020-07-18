@@ -16,5 +16,6 @@ spec:
       containers:
         - image: docker.io/chrismarquez/pokemon-api:latest
           name: pokemon-api-instance
+          imagePullPolicy: "Always"
           ports:
             - containerPort: 8080

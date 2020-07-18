@@ -50,9 +50,9 @@ jobs:
       - run:
           name: Build and push docker
           command: |
-            docker build -t chrismarquez/$IMAGE_NAME:$CIRCLE_SHA1 .
+            docker build -t chrismarquez/$IMAGE_NAME:$TAG .
             echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
-            docker push chrismarquez/$IMAGE_NAME:$$CIRCLE_SHA1
+            docker push chrismarquez/$IMAGE_NAME:$TAG
   deploy:
     description: Deploy application to Google Kubernetes Engine
     machine: true
@@ -69,7 +69,7 @@ jobs:
           deployment: pokemon-api-deployment
           container: pokemon-api-instance
           image: docker.io/chrismarquez/$IMAGE_NAME # change version when updating
-          tag: $CIRCLE_SHA1
+          tag: $TAG
 
 workflows:
   version: 2.1
