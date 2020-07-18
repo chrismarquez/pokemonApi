@@ -70,6 +70,9 @@ jobs:
           container: pokemon-api-instance
           image: docker.io/chrismarquez/$IMAGE_NAME # change version when updating
           tag: $TAG
+      - run:
+          name: Rollout
+          command: kubectl rollout restart deployment pokemon-api-deployment
 
 workflows:
   version: 2.1

@@ -10,7 +10,7 @@ import io.ktor.routing.routing
 fun Application.routes() = routing {
     route("/") {
         get {
-            call.respond("I am too alive to be true, once again")
+            call.respond("I am too alive, and I am the Senate")
         }
     }
 }
