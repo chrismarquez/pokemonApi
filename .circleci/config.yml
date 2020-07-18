@@ -5,6 +5,7 @@
 version: 2.1
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.4
+  gcloud: circleci/gcp-cli@1.8.3
 jobs:
   build:
     docker:
@@ -61,6 +62,7 @@ jobs:
           command: echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
       # Install `gcloud` and `kubectl` if not already installed.
       - gcp-gke/install
+      - gcloud/initialize
       # Update a deployment Docker image.
       - gcp-gke/rollout-image:
           cluster: cluster-1
