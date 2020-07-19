@@ -11,6 +11,7 @@ import io.ktor.client.response.HttpResponse
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 
 class PokemonService {
@@ -28,22 +29,31 @@ class PokemonService {
 	}
 
 	suspend fun compareBattling(attacking: String, defending: String): BattleCompareRes = withContext(Dispatchers.IO) {
-        val atkPokemonResDeferred = async { client.get<HttpResponse>("$pokeApiUrl/pokemon/$attacking/") }
-        val defPokemonResDeferred = async { client.get<HttpResponse>("$pokeApiUrl/pokemon/$defending/") }
-        val atkPokemonResponse = atkPokemonResDeferred.await()
-        val defPokemonResponse = defPokemonResDeferred.await()
-        if (atkPokemonResponse.status == HttpStatusCode.NotFound) throw NotFoundException("Pokemon $attacking does not exist")
-        if (defPokemonResponse.status == HttpStatusCode.NotFound) throw NotFoundException("Pokemon $defending does not exist")
-        val atkPokemonRes = atkPokemonResponse.receive<PokemonRes>()
-        val defPokemonRes = defPokemonResponse.receive<PokemonRes>()
+		val (atkPokemonRes, defPokemonRes) = retrievePokemon(attacking, defending)
         val atkPokemon = Pokemon.fromTypeList(atkPokemonRes.name, atkPokemonRes.types.map { it.type.name })
         val defPokemon = Pokemon.fromTypeList(defPokemonRes.name, defPokemonRes.types.map { it.type.name })
         val (battleTo, battleFrom) = calculatePokemonAdvantage(atkPokemonRes, defPokemonRes)
         BattleCompareRes(atkPokemon, defPokemon, battleTo, battleFrom)
 	}
 
-	suspend fun findCommonMoves(first: String, second: String, limit: Int, language: String): CommonMovesRes {
-		throw NotImplementedError()
+	suspend fun findCommonMoves(first: String, second: String, limit: Int, language: String): CommonMovesRes = withContext(Dispatchers.IO) {
+		val pokemonList = retrievePokemon(first, second).toList()
+		val (movesA, movesB) = pokemonList.map { pokemon -> pokemon.moves.map { it.move.url } }
+		val moves = movesA intersect movesB
+		val limitedMoves = if (limit >= 0) moves.take(limit) else moves
+		val promiseList = limitedMoves.map {
+			async { client.get<MoveRes>(it) }
+		}
+		val movesList = promiseList.awaitAll().handleMoveLanguage(language)
+		val (pokemonA, pokemonB) = pokemonList.map { pokemon -> Pokemon.fromTypeList(pokemon.name, pokemon.types.map { it.type.name }) }
+		CommonMovesRes(pokemonA, pokemonB, movesList)
+	}
+
+	private fun List<MoveRes>.handleMoveLanguage(language: String): List<String> = map {
+		val availableLanguages = it.names.map { moveName -> moveName.language.name }
+		if (language in availableLanguages) {
+			it.names.find { moveName -> moveName.language.name == language }?.name ?: it.name
+		} else it.name
 	}
 
     private suspend fun calculatePokemonAdvantage(atkPokemon: PokemonRes, defPokemon: PokemonRes): Pair<Battle, Battle> {
@@ -61,6 +71,18 @@ class PokemonService {
         val (typeADamage, typeBDamage) = types
         return if (typeADamage.first.multiplier > typeBDamage.first.multiplier) typeADamage else typeBDamage
     }
+
+	private suspend fun retrievePokemon(atkPokemon: String, defPokemon: String): Pair<PokemonRes, PokemonRes> = withContext(Dispatchers.IO) {
+		val atkPokemonResDeferred = async { client.get<HttpResponse>("$pokeApiUrl/pokemon/$atkPokemon/") }
+		val defPokemonResDeferred = async { client.get<HttpResponse>("$pokeApiUrl/pokemon/$defPokemon/") }
+		val atkPokemonResponse = atkPokemonResDeferred.await()
+		val defPokemonResponse = defPokemonResDeferred.await()
+		if (atkPokemonResponse.status == HttpStatusCode.NotFound) throw NotFoundException("Pokemon $atkPokemon does not exist")
+		if (defPokemonResponse.status == HttpStatusCode.NotFound) throw NotFoundException("Pokemon $defPokemon does not exist")
+		val atkPokemonRes = atkPokemonResponse.receive<PokemonRes>()
+		val defPokemonRes = defPokemonResponse.receive<PokemonRes>()
+		Pair(atkPokemonRes, defPokemonRes)
+	}
 
 	private suspend fun calculateTypeAdvantage(atkTypeUrl: String, defTypeUrl: String): Pair<Battle, Battle> = withContext(Dispatchers.IO) {
 		val atkTypeDeferred = async { client.get<TypeRes>(atkTypeUrl) }
