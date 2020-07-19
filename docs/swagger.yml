@@ -68,21 +68,42 @@ components:
           type: string
         type:
           type: string
+    PokemonBattle:
+      type: object
+      required:
+        - multiplier
+        - description
+      properties:
+        multiplier:
+          type: number
+          description: The damage multiplier applied when a pokemon attacks another based on their types
+        description:
+          type: string
+          description: A short text describing how the battle between pokemons went
     CommonMoves:
       type: object
       required:
         - firstPokemon
         - secondPokemon
-        - moveList
+        - attack
+        - defense
       properties:
         firstPokemon:
           $ref: '#/components/schemas/Pokemon'
         secondPokemon:
           $ref: '#/components/schemas/Pokemon'
-        moveList:
-          type: array
-          items:
-            type: string
+        attack:
+          $ref: '#/components/schemas/PokemonBattle'
+        defense:
+          $ref: '#/components/schemas/PokemonBattle'
+      example:
+        firstPokemon:
+          name: "Charizard"
+          type: "[ Fire / Flying ]"
+        secondPokemon:
+          name: "Bulbasaur"
+          type: "[ Grass / Poison ]"
+
     Failure:
       type: object
       required:
