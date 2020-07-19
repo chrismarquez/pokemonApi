@@ -1,13 +1,14 @@
 package com.christopher.pokemonService.extensions
 
 val Any.success
-    get() = mapOf(
-        "status" to "success",
-        "data" to this
-    )
+    get() = Success(this)
 
 val Any.failure
-    get() = mapOf(
-        "status" to "failure",
-        "data" to this
-    )
+    get() = Failure(this)
+
+sealed class Response (
+    val status: String
+)
+
+class Success<T>(val data: T) : Response("success")
+class Failure<T>(val data: T) : Response("failure")

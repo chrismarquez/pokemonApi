@@ -1,13 +1,13 @@
 package com.christopher.pokemonService
 
-import com.christopher.pokemonService.exceptions.InternalServerException
 import com.christopher.pokemonService.exceptions.NotFoundException
 import com.christopher.pokemonService.models.*
 import io.ktor.client.HttpClient
-import io.ktor.client.features.ClientRequestException
+import io.ktor.client.call.receive
 import io.ktor.client.features.json.GsonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.get
+import io.ktor.client.response.HttpResponse
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -18,6 +18,7 @@ class PokemonService {
 	private val pokeApiUrl = "https://pokeapi.co/api/v2"
 
 	private val client = HttpClient {
+        expectSuccess = false
 		install(JsonFeature) {
 			serializer = GsonSerializer {
 				setPrettyPrinting()
@@ -27,20 +28,18 @@ class PokemonService {
 	}
 
 	suspend fun compareBattling(attacking: String, defending: String): BattleCompareRes = withContext(Dispatchers.IO) {
-		try {
-			val atkPokemonResDeferred = async { client.get<PokemonRes>("$pokeApiUrl/pokemon/$attacking/") }
-			val defPokemonResDeferred = async { client.get<PokemonRes>("$pokeApiUrl/pokemon/$defending/") }
-            val atkPokemonRes = atkPokemonResDeferred.await()
-            val defPokemonRes = defPokemonResDeferred.await()
-            val atkPokemon = Pokemon.fromTypeList(atkPokemonRes.name, atkPokemonRes.types.map { it.type.name })
-            val defPokemon = Pokemon.fromTypeList(defPokemonRes.name, defPokemonRes.types.map { it.type.name })
-            val (battleTo, battleFrom) = calculatePokemonAdvantage(atkPokemonRes, defPokemonRes)
-			BattleCompareRes(atkPokemon, defPokemon, battleTo, battleFrom)
-		} catch (e: ClientRequestException) {
-			e.printStackTrace()
-			if (e.response.status == HttpStatusCode.NotFound) throw NotFoundException("Pokemon does not exist")
-			else throw InternalServerException("Unknown error")
-		}
+        val atkPokemonResDeferred = async { client.get<HttpResponse>("$pokeApiUrl/pokemon/$attacking/") }
+        val defPokemonResDeferred = async { client.get<HttpResponse>("$pokeApiUrl/pokemon/$defending/") }
+        val atkPokemonResponse = atkPokemonResDeferred.await()
+        val defPokemonResponse = defPokemonResDeferred.await()
+        if (atkPokemonResponse.status == HttpStatusCode.NotFound) throw NotFoundException("Pokemon $attacking does not exist")
+        if (defPokemonResponse.status == HttpStatusCode.NotFound) throw NotFoundException("Pokemon $defending does not exist")
+        val atkPokemonRes = atkPokemonResponse.receive<PokemonRes>()
+        val defPokemonRes = defPokemonResponse.receive<PokemonRes>()
+        val atkPokemon = Pokemon.fromTypeList(atkPokemonRes.name, atkPokemonRes.types.map { it.type.name })
+        val defPokemon = Pokemon.fromTypeList(defPokemonRes.name, defPokemonRes.types.map { it.type.name })
+        val (battleTo, battleFrom) = calculatePokemonAdvantage(atkPokemonRes, defPokemonRes)
+        BattleCompareRes(atkPokemon, defPokemon, battleTo, battleFrom)
 	}
 
 	suspend fun findCommonMoves(first: String, second: String, limit: Int, language: String): CommonMovesRes {
@@ -101,7 +100,7 @@ class PokemonService {
         )
 	}
 
-    fun getAttackMessage(multiplier: Double, atkType: String, defType: String): String = when(multiplier) {
+    private fun getAttackMessage(multiplier: Double, atkType: String, defType: String): String = when(multiplier) {
         2.0 -> "It's super effective! A $atkType type attack deals double damage to $defType pokemon."
         0.5 -> "Not very effective! A $atkType type attack deals half damage to $defType pokemon."
         0.0 -> "Not effective!! A $atkType type attack deals no damage to $defType pokemon."

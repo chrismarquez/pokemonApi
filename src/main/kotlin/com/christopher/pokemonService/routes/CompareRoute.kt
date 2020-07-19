@@ -3,6 +3,7 @@ package com.christopher.pokemonService.routes
 import com.christopher.pokemonService.PokemonService
 import com.christopher.pokemonService.exceptions.BadRequestException
 import com.christopher.pokemonService.exceptions.exceptionally
+import com.christopher.pokemonService.extensions.success
 import io.ktor.application.call
 import io.ktor.response.respond
 import io.ktor.routing.Route
@@ -16,7 +17,7 @@ fun Route.compare() {
         val attacking = call.parameters["atk"] ?: throw BadRequestException("Expecting atk parameter, the attacking pokemon name")
         val defending = call.parameters["def"] ?: throw BadRequestException("Expecting def parameter, the defending pokemon name")
         val response = service.compareBattling(attacking.toLowerCase(), defending.toLowerCase())
-        call.respond(response)
+        call.respond(response.success)
     }}
 
 }

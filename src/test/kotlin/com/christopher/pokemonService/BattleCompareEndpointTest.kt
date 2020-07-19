@@ -1,5 +1,6 @@
 package com.christopher.pokemonService
 
+import com.christopher.pokemonService.extensions.Success
 import com.christopher.pokemonService.models.BattleCompareRes
 import io.ktor.client.HttpClient
 import io.ktor.client.features.json.GsonSerializer
@@ -28,6 +29,7 @@ internal class BattleCompareEndpointTest {
     fun startApp() {
         server = runApp(wait = false)
         client = HttpClient {
+            expectSuccess = false
             install(JsonFeature) {
                 serializer = GsonSerializer {
                     setPrettyPrinting()
@@ -52,11 +54,11 @@ internal class BattleCompareEndpointTest {
     fun endpointAcceptsCorrectRequest() = runBlocking {
         val attacking = "Charizard"
         val defending = "Bulbasaur"
-        val response = client.get<BattleCompareRes>("$baseUrl/compare/") {
+        val response = client.get<Success<BattleCompareRes>>("$baseUrl/compare/") {
             parameter("atk", attacking)
             parameter("def", defending)
         }
-        with (response) {
+        with (response.data) {
             assertEquals(attacking, attackingPokemon.name)
             assertEquals(defending, defendingPokemon.name)
             assertEquals("[ Fire / Flying ]", attackingPokemon.type)
