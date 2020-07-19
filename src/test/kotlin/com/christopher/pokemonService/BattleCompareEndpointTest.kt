@@ -2,6 +2,8 @@ package com.christopher.pokemonService
 
 import com.christopher.pokemonService.models.BattleCompareRes
 import io.ktor.client.HttpClient
+import io.ktor.client.features.json.GsonSerializer
+import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.response.HttpResponse
@@ -25,7 +27,14 @@ internal class BattleCompareEndpointTest {
     @BeforeAll
     fun startApp() {
         server = runApp(wait = false)
-        client = HttpClient {}
+        client = HttpClient {
+            install(JsonFeature) {
+                serializer = GsonSerializer {
+                    setPrettyPrinting()
+                    serializeNulls()
+                }
+            }
+        }
     }
 
     @AfterAll
@@ -48,26 +57,26 @@ internal class BattleCompareEndpointTest {
             parameter("def", defending)
         }
         with (response) {
-            assertEquals(attackingPokemon.name, attacking)
-            assertEquals(defendingPokemon.name, defending)
-            assertEquals(attackingPokemon.type, "[ Fire / Flying ]")
-            assertEquals(defendingPokemon.type, "[ Grass / Poison ]")
-            assertEquals(attack.multiplier, 2.0)
-            assertEquals(defense.multiplier, 0.5)
+            assertEquals(attacking, attackingPokemon.name)
+            assertEquals(defending, defendingPokemon.name)
+            assertEquals("[ Fire / Flying ]", attackingPokemon.type)
+            assertEquals("[ Grass / Poison ]", defendingPokemon.type)
+            assertEquals(2.0, attack.multiplier)
+            assertEquals(0.5, defense.multiplier)
         }
     }
 
     @Test
     fun endpointRejectsInvalidRequest() = runBlocking {
         val noArgsResponse = client.get<HttpResponse>("$baseUrl/compare/")
-        assertEquals(noArgsResponse.status, HttpStatusCode.BadRequest)
+        assertEquals(HttpStatusCode.BadRequest, noArgsResponse.status)
         val oneArgResponse = client.get<HttpResponse>("$baseUrl/compare/") { parameter("atk", "Charizard") }
-        assertEquals(oneArgResponse, HttpStatusCode.BadRequest)
+        assertEquals(HttpStatusCode.BadRequest, oneArgResponse.status)
         val incorrectArgsResponse = client.get<HttpResponse>("$baseUrl/compare/") {
             parameter("atkl", "Charizard")
             parameter("df", "Bulbasaur")
         }
-        assertEquals(incorrectArgsResponse, HttpStatusCode.BadRequest)
+        assertEquals(HttpStatusCode.BadRequest, incorrectArgsResponse.status)
     }
 
 }

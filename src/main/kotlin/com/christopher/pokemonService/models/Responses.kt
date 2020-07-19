@@ -17,3 +17,4 @@ data class CommonMovesRes (
     val secondPokemon: Pokemon,
     val moveList: List<String>
 )
+

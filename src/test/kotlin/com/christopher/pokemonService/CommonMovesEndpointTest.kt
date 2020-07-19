@@ -2,6 +2,8 @@ package com.christopher.pokemonService
 
 import com.christopher.pokemonService.models.CommonMovesRes
 import io.ktor.client.HttpClient
+import io.ktor.client.features.json.GsonSerializer
+import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -26,7 +28,14 @@ internal class CommonMovesEndpointTest {
     @BeforeAll
     fun startApp() {
         server = runApp(wait = false)
-        client = HttpClient {}
+        client = HttpClient {
+            install(JsonFeature) {
+                serializer = GsonSerializer {
+                    setPrettyPrinting()
+                    serializeNulls()
+                }
+            }
+        }
     }
 
     @AfterAll
@@ -43,10 +52,10 @@ internal class CommonMovesEndpointTest {
             parameter("second", second)
         }
         with (result) {
-            assertEquals(firstPokemon.name, "Charizard")
-            assertEquals(secondPokemon.name, "Moltres")
-            assertEquals(firstPokemon.type, "[ Fire / Flying ]")
-            assertEquals(secondPokemon.type, "[ Fire / Flying ]")
+            assertEquals("Charizard", firstPokemon.name)
+            assertEquals("Moltres", secondPokemon.name)
+            assertEquals("[ Fire / Flying ]", firstPokemon.type)
+            assertEquals("[ Fire / Flying ]", secondPokemon.type)
         }
     }
 
@@ -59,20 +68,20 @@ internal class CommonMovesEndpointTest {
             parameter("second", second)
             parameter("limit", 5)
         }
-        assertEquals(result.moveList.size, 5)
+        assertEquals(5, result.moveList.size)
     }
 
     @Test
     fun endpointRejectsInvalidRequest() = runBlocking {
         val noArgsResponse = client.get<HttpResponse>("$baseUrl/common/")
-        assertEquals(noArgsResponse.status, HttpStatusCode.BadRequest)
+        assertEquals(HttpStatusCode.BadRequest, noArgsResponse.status)
         val oneArgResponse = client.get<HttpResponse>("$baseUrl/compare/") { parameter("first", "Charizard") }
-        assertEquals(oneArgResponse, HttpStatusCode.BadRequest)
+        assertEquals(HttpStatusCode.BadRequest, oneArgResponse)
         val incorrectArgsResponse = client.get<HttpResponse>("$baseUrl/compare/") {
             parameter("firsz", "Charizard")
             parameter("seconx", "Charizard")
         }
-        assertEquals(incorrectArgsResponse, HttpStatusCode.BadRequest)
+        assertEquals(HttpStatusCode.BadRequest, incorrectArgsResponse)
     }
 
     @Test
