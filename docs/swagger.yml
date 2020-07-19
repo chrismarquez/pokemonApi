@@ -30,7 +30,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommonMoves'
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/CommonMoves'
         400:
           description: The atk and def parameters contain incorrect values, or any of them is missing.
           content:
