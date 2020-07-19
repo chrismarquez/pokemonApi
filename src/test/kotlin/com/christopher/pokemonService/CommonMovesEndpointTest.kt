@@ -1,5 +1,6 @@
 package com.christopher.pokemonService
 
+import com.christopher.pokemonService.extensions.Success
 import com.christopher.pokemonService.models.CommonMovesRes
 import io.ktor.client.HttpClient
 import io.ktor.client.features.json.GsonSerializer
@@ -47,11 +48,11 @@ internal class CommonMovesEndpointTest {
     fun endpointAcceptsCorrectRequest() = runBlocking {
         val first = "Charizard"
         val second = "Moltres"
-        val result = client.get<CommonMovesRes>("$baseUrl/common/") {
+        val result = client.get<Success<CommonMovesRes>>("$baseUrl/common/") {
             parameter("first", first)
             parameter("second", second)
         }
-        with (result) {
+        with (result.data) {
             assertEquals("Charizard", firstPokemon.name)
             assertEquals("Moltres", secondPokemon.name)
             assertEquals("[ Fire / Flying ]", firstPokemon.type)
@@ -63,12 +64,12 @@ internal class CommonMovesEndpointTest {
     fun endpointAcceptsRequestWithLimit() = runBlocking {
         val first = "Charizard"
         val second = "Moltres"
-        val result = client.get<CommonMovesRes>("$baseUrl/common/") {
+        val result = client.get<Success<CommonMovesRes>>("$baseUrl/common/") {
             parameter("first", first)
             parameter("second", second)
             parameter("limit", 5)
         }
-        assertEquals(5, result.moveList.size)
+        assertEquals(5, result.data.moveList.size)
     }
 
     @Test
@@ -76,12 +77,12 @@ internal class CommonMovesEndpointTest {
         val noArgsResponse = client.get<HttpResponse>("$baseUrl/common/")
         assertEquals(HttpStatusCode.BadRequest, noArgsResponse.status)
         val oneArgResponse = client.get<HttpResponse>("$baseUrl/compare/") { parameter("first", "Charizard") }
-        assertEquals(HttpStatusCode.BadRequest, oneArgResponse)
+        assertEquals(HttpStatusCode.BadRequest, oneArgResponse.status)
         val incorrectArgsResponse = client.get<HttpResponse>("$baseUrl/compare/") {
             parameter("firsz", "Charizard")
             parameter("seconx", "Charizard")
         }
-        assertEquals(HttpStatusCode.BadRequest, incorrectArgsResponse)
+        assertEquals(HttpStatusCode.BadRequest, incorrectArgsResponse.status)
     }
 
     @Test
@@ -90,20 +91,20 @@ internal class CommonMovesEndpointTest {
         val second = "Moltres"
 
         suspend fun validateLanguage(language: String, expectedName: String) {
-            val foreignResult = client.get<CommonMovesRes>("$baseUrl/common") {
+            val foreignResult = client.get<Success<CommonMovesRes>>("$baseUrl/common") {
                 parameter("first", first)
                 parameter("second", second)
                 header("Accept-Language", language)
             }
-            with (foreignResult) {
+            with (foreignResult.data) {
                 val containsName = expectedName in moveList // wing-attack
                 assertTrue(containsName)
             }
         }
 
         validateLanguage("ja-Hrkt", "つばさでうつ")
-        validateLanguage("ja-Hrkt", "翅膀攻击")
-        validateLanguage("es-Mx", "Ataque Ala")
+        validateLanguage("zh-Hans", "翅膀攻击")
+        validateLanguage("es", "Ataque Ala")
     }
 
 }
