@@ -4,10 +4,10 @@ info:
   description: Title
   version: 1.0.0
 servers:
-# Added by API Auto Mocking Plugin
+  # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/chrismarquez7/PokemonAPI/1.0.0
-  - url: 'http://pokemon-api.ddns.net'
+  - url: 'http://pokemon-api.ddns.net:8080'
 paths:
   /common:
     get:
@@ -79,14 +79,14 @@ components:
           items:
             type: string
     Failure:
-        type: object
-        required:
-          - status
-          - data
-        properties:
-          status:
-            type: string
-          data:
-            description: The reason for failure
-            type: string
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+        data:
+          description: The reason for failure
+          type: string
   #  ---- /Definitions  ----------------------------------------
