@@ -1,11 +1,54 @@
 openapi: 3.0.0
 info:
-  title: Title
+  title: PokemonAPI
   description: Title
   version: 1.0.0
 servers:
 # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/chrismarquez7/PokemonAPI/1.0.0
-  - url: 'http'
+  - url: 'http://pokemon-api.ddns.net'
 paths:
+  /common:
+    get:
+      responses:
+        200:
+          description: Successfully returned both pokemos base info and damage multipliers among them
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonMoves'
+
+
+      description: Given two pokemons, return whether the first might have an advantage over the second (based on damage multipliers)
+
+
+#  ----- Definitions  ----------------------------------------
+components:
+  schemas:
+    Pokemon:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+    CommonMoves:
+      type: object
+      required:
+        - firstPokemon
+        - secondPokemon
+        - moveList
+      properties:
+        firstPokemon:
+          $ref: '#/components/schemas/Pokemon'
+        secondPokemon:
+          $ref: '#/components/schemas/Pokemon'
+        moveList:
+          type: array
+          items:
+            type: string
+  #  ---- /Definitions  ----------------------------------------
