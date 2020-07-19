@@ -9,7 +9,7 @@ servers:
     url: https://virtserver.swaggerhub.com/chrismarquez7/PokemonAPI/1.0.0
   - url: 'http://pokemon-api.ddns.net:8080'
 paths:
-  /common:
+  /compare:
     get:
       parameters:
         - name: atk
