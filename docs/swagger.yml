@@ -11,13 +11,40 @@ servers:
 paths:
   /common:
     get:
+      parameters:
+        - name: atk
+          in: query
+          required: true
+          description: The attacking pokemon (comparing its effectiveness against defending pokemon)
+          schema:
+            type: string
+        - name: def
+          in: query
+          required: true
+          description: The defending pokemon (comparing how effective the attacking pokemon is against it)
+          schema:
+            type: string
       responses:
         200:
-          description: Successfully returned both pokemos base info and damage multipliers among them
+          description: Successfully returned both pokemos base info and damage multipliers among them.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonMoves'
+        400:
+          description: The atk and def parameters contain incorrect values, or any of them is missing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Failure'
+        404:
+          description: Either of the provided pokemon names does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Failure'
+        default:
+          description: Unexpected error
 
 
       description: Given two pokemons, return whether the first might have an advantage over the second (based on damage multipliers)
@@ -50,5 +77,16 @@ components:
         moveList:
           type: array
           items:
+            type: string
+    Failure:
+        type: object
+        required:
+          - status
+          - data
+        properties:
+          status:
+            type: string
+          data:
+            description: The reason for failure
             type: string
   #  ---- /Definitions  ----------------------------------------
