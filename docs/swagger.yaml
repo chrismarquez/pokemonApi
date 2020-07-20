@@ -4,7 +4,7 @@ info:
   description: Title
   version: 1.0.0
 servers:
-  - url: 'http://pokemon-api.ddns.net:8080'
+  - url: 'http://pokemon-api.ddns.net/v1:8080'
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/chrismarquez7/PokemonAPI/1.0.0
