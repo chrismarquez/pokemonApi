@@ -11,6 +11,7 @@ servers:
 paths:
   /compare:
     get:
+      description: Given two pokemons, return whether the first might have an advantage over the second (based on damage multipliers)
       parameters:
         - name: atk
           in: query
@@ -35,7 +36,7 @@ paths:
                   status:
                     type: string
                   data:
-                    $ref: '#/components/schemas/CommonMoves'
+                    $ref: '#/components/schemas/BattleAdvantage'
         400:
           description: The atk and def parameters contain incorrect values, or any of them is missing.
           content:
@@ -50,9 +51,62 @@ paths:
                 $ref: '#/components/schemas/Failure'
         default:
           description: Unexpected error
+  /common:
+    get:
+      description: Given two pokemons, return the moves that they have in common, in the requested language
+      parameters:
+        - name: first
+          in: query
+          required: true
+          description: One of the pokemon to use (name)
+          schema:
+            type: string
+        - name: second
+          in: query
+          required: true
+          description: The other pokemon to use (name)
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: The maximum amount of results to return. Must be a positive integer or zero.
+          schema:
+            type: number
+        - name: Accept-Language
+          in: header
+          required: false
+          description: The language in which to return the moves' names. If not included, defaults to en (English)
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully returned the requested amount of pokemon common moves, in the target language
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/CommonMoves'
+        400:
+          description: The first and second parameters contain incorrect values, or any of them is missing.
+                       The provided limit is not an integer, or it is below zero.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Failure'
+        404:
+          description: Either of the provided pokemon names does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Failure'
+        default:
+          description: Unexpected error
 
-
-      description: Given two pokemons, return whether the first might have an advantage over the second (based on damage multipliers)
 
 
 #  ----- Definitions  ----------------------------------------
@@ -66,8 +120,10 @@ components:
       properties:
         name:
           type: string
+          description: The name of the Pokemon
         type:
           type: string
+          description: The type (or types) that a Pokemon belongs to
     PokemonBattle:
       type: object
       required:
@@ -80,7 +136,7 @@ components:
         description:
           type: string
           description: A short text describing how the battle between pokemons went
-    CommonMoves:
+    BattleAdvantage:
       type: object
       required:
         - firstPokemon
@@ -103,7 +159,40 @@ components:
         secondPokemon:
           name: "Bulbasaur"
           type: "[ Grass / Poison ]"
-
+        attack:
+          multiplier: 2.0,
+          description: "It's super effective! A fairy type attack deals double damage to dark pokemon."
+        defense:
+          multiplier: 0.0
+          description: "Not effective!! A dragon type attack deals no damage to fairy pokemon."
+    CommonMoves:
+      type: object
+      required:
+        - firstPokemon
+        - secondPokemon
+        - movesList
+      properties:
+        firstPokemon:
+          $ref: '#/components/schemas/Pokemon'
+        secondPokemon:
+          $ref: '#/components/schemas/Pokemon'
+        movesList:
+          type: array
+          items:
+            type: string
+      example:
+        firstPokemon:
+          name: "Charizard"
+          type: "[ Fire / Flying ]"
+        secondPokemon:
+          name: "Bulbasaur"
+          type: "[ Grass / Poison ]"
+        moveList:
+          - "Swords Dance"
+          - "Cut"
+          - "Headbutt"
+          - "Body Slam"
+          - "Take Down"
     Failure:
       type: object
       required:
