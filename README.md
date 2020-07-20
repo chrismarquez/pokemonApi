@@ -54,7 +54,7 @@ If you wish to contribute, please follow the following guidelines
 
 ## Thanks
 
-Kudos to [PokeAPI](https://pokeapi.co/) for providing open data that made this project possible.
+Special thanks to [PokeAPI](https://pokeapi.co/) for providing open data that made this project possible.
 
 ## Maintainers
 [@chrismarquez](http://github.com/chrismarquez)
