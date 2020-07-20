@@ -1,4 +1,4 @@
-package com.christopher.pokemonService
+package com.christopher.pokemonService.services
 
 import com.christopher.pokemonService.exceptions.NotFoundException
 import com.christopher.pokemonService.models.*
@@ -14,6 +14,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 
+/*
+* The main business service. In charge of contacting an external API to retrieve requested data,
+* and transform it to match queries
+* @constructor Creates an instance of this service
+* */
 class PokemonService {
 
 	private val pokeApiUrl = "https://pokeapi.co/api/v2"
@@ -28,6 +33,13 @@ class PokemonService {
 		}
 	}
 
+	/*
+	* Given two pokemons, return whether the first might have an advantage over the second (based on damage multipliers)
+	* @param attacking The attacking pokemon name (comparing its effectiveness against defending pokemon)
+	* @param defending The defending pokemon name (comparing how effective the attacking pokemon is against it)
+	* @return A BattleCompareRes object containing the resulting multipliers and descriptions
+	* @throws BadRequestException, NotFoundException
+	* */
 	suspend fun compareBattling(attacking: String, defending: String): BattleCompareRes = withContext(Dispatchers.IO) {
 		val (atkPokemonRes, defPokemonRes) = retrievePokemon(attacking, defending)
         val atkPokemon = Pokemon.fromTypeList(atkPokemonRes.name, atkPokemonRes.types.map { it.type.name })
@@ -36,6 +48,15 @@ class PokemonService {
         BattleCompareRes(atkPokemon, defPokemon, battleTo, battleFrom)
 	}
 
+	/*
+	* Given two pokemons, return whether the first might have an advantage over the second (based on damage multipliers)
+	* @param first One of the pokemon to use (name)
+	* @param second The other pokemon to use (name)
+	* @param limit The maximum amount of results to return. Must be a positive integer or zero.
+	* @param language The language in which to return the moves' names.
+	* @return A CommonMovesRes object containing the resulting shared move names in the requested language
+	* @throws BadRequestException, NotFoundException
+	* */
 	suspend fun findCommonMoves(first: String, second: String, limit: Int, language: String): CommonMovesRes = withContext(Dispatchers.IO) {
 		val pokemonList = retrievePokemon(first, second).toList()
 		val (movesA, movesB) = pokemonList.map { pokemon -> pokemon.moves.map { it.move.url } }
@@ -90,29 +111,8 @@ class PokemonService {
 		val atkType = atkTypeDeferred.await()
 		val defType = defTypeDeferred.await()
 
-		val damageTo = when (defType.name) {
-			in atkType.damage_relations.double_damage_to.map { it.name } -> 2.0
-			in atkType.damage_relations.half_damage_to.map { it.name } -> 0.5
-			in atkType.damage_relations.no_damage_to.map { it.name } -> 0.0
-			else -> when (atkType.name) {
-				in defType.damage_relations.double_damage_from.map { it.name } -> 2.0
-				in defType.damage_relations.half_damage_from.map { it.name } -> 0.5
-				in defType.damage_relations.no_damage_from.map { it.name } -> 0.0
-				else -> 1.0
-			}
-		}
-
-		val damageFrom = when (defType.name) {
-			in atkType.damage_relations.double_damage_from.map { it.name } -> 2.0
-			in atkType.damage_relations.half_damage_from.map { it.name } -> 0.5
-			in atkType.damage_relations.no_damage_from.map { it.name } -> 0.0
-			else -> when (atkType.name) {
-				in defType.damage_relations.double_damage_to.map { it.name } -> 2.0
-				in defType.damage_relations.half_damage_to.map { it.name } -> 0.5
-				in defType.damage_relations.no_damage_to.map { it.name } -> 0.0
-				else -> 1.0
-			}
-		}
+		val damageTo = typeMatching(atkType, defType)
+		val damageFrom = typeMatching(defType, atkType)
 
         val damageToMessage = getAttackMessage(damageTo, atkType.name, defType.name)
         val damageFromMessage = getAttackMessage(damageFrom, defType.name, atkType.name)
@@ -120,6 +120,18 @@ class PokemonService {
             Battle(damageTo, damageToMessage),
             Battle(damageFrom, damageFromMessage)
         )
+	}
+
+	private fun typeMatching(atkType: TypeRes, defType: TypeRes): Double  = when (defType.name) {
+		in atkType.damage_relations.double_damage_to.map { it.name } -> 2.0
+		in atkType.damage_relations.half_damage_to.map { it.name } -> 0.5
+		in atkType.damage_relations.no_damage_to.map { it.name } -> 0.0
+		else -> when (atkType.name) {
+			in defType.damage_relations.double_damage_from.map { it.name } -> 2.0
+			in defType.damage_relations.half_damage_from.map { it.name } -> 0.5
+			in defType.damage_relations.no_damage_from.map { it.name } -> 0.0
+			else -> 1.0
+		}
 	}
 
     private fun getAttackMessage(multiplier: Double, atkType: String, defType: String): String = when(multiplier) {

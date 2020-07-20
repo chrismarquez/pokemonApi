@@ -1,5 +1,9 @@
 package com.christopher.pokemonService.models
 
+/*
+* Objects returned from the API this service consumes
+* */
+
 data class ResourceInfo (
     val name: String,
     val url: String

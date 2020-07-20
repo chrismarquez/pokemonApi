@@ -8,6 +8,12 @@ import io.ktor.response.respond
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.pipeline.PipelineInterceptor
 
+/*
+* Middleware DSL function that performs exception processing, mapping errors to related status codes
+* and managing delivering the appropriate error response to calling client.
+* Provides the same context as any Route method handler.
+* @param fn The handler for the current route.
+* */
 suspend fun PipelineContext<Unit, ApplicationCall>.exceptionally(
     fn: PipelineInterceptor<Unit, ApplicationCall>
 ) {
@@ -25,6 +31,9 @@ suspend fun PipelineContext<Unit, ApplicationCall>.exceptionally(
     }
 }
 
+/*
+* Class representing an error related to an appropriate status code.
+* */
 sealed class ErrorStatusCodeException(message: String): Exception(message) {
     abstract val statusCode: HttpStatusCode
 }

@@ -24,21 +24,29 @@ All supported API methods and their related parameters can be found in the OpenA
 1. Java SDK version 11 or higher
 2. Docker (To run as a container)
 
-To run this service locally, after cloning this repository:
+#####To run this service locally, after cloning this repository:
 - If you have a macOS or Linux system, run `./gradlew run` in your terminal.
 - If you have a Windows system, run `gradlew.bat run` in the command line.
 
-To build a standalone Jar file:
+#####To build a standalone Jar file:
 - If you have a macOS or Linux system, run `./gradlew shadowJar` in your terminal.
 - If you have a Windows system, run `gradlew.bat shadowJar` in the command line.
 
-To run all tests:
+#####To run all tests:
 - If you have a macOS or Linux system, run `./gradlew test` in your terminal.
 - If you have a Windows system, run `gradlew.bat test` in the command line.
+
+##### Running with Docker
+
+If you want, you can spin up a Docker image with the service from [here](https://hub.docker.com/repository/docker/chrismarquez/pokemon-api)
+
+##### Working with your IDE
 
 If you are using the IntelliJ IDEA IDE (recommended), to start working open the project
 with the editor as a Gradle project. The IDE will pickup the project configuration and 
 set up accordingly.
+
+If you prefer to use any other editor, use Gradle commands (as shown above) to run the project and / or tests.
 
 ## Contributing
 

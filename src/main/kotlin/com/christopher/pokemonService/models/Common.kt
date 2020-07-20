@@ -1,5 +1,9 @@
 package com.christopher.pokemonService.models
 
+/*
+* Common objects used throughout the Application
+* */
+
 data class Pokemon (
     val name: String,
     val type: String
