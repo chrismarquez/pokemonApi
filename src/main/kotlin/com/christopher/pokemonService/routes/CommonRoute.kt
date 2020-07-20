@@ -1,6 +1,6 @@
 package com.christopher.pokemonService.routes
 
-import com.christopher.pokemonService.PokemonService
+import com.christopher.pokemonService.services.PokemonService
 import com.christopher.pokemonService.exceptions.BadRequestException
 import com.christopher.pokemonService.exceptions.exceptionally
 import com.christopher.pokemonService.extensions.success

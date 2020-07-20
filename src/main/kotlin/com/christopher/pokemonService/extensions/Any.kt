@@ -1,5 +1,9 @@
 package com.christopher.pokemonService.extensions
 
+/*
+* Extensions to the Any type.
+* */
+
 val Any.success
     get() = Success(this)
 
