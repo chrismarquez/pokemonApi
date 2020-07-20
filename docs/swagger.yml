@@ -51,7 +51,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Failure'
-        default:
+        500:
           description: Unexpected error
   /common:
     get:
@@ -108,7 +108,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Failure'
-        default:
+        500:
           description: Unexpected error
 
 
