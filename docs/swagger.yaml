@@ -1,0 +1,218 @@
+openapi: 3.0.0
+info:
+  title: PokemonAPI
+  description: Title
+  version: 1.0.0
+servers:
+  - url: 'http://pokemon-api.ddns.net:8080'
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/chrismarquez7/PokemonAPI/1.0.0
+paths:
+  /compare:
+    get:
+      description: Given two pokemons, return whether the first might have an advantage over the second (based on damage multipliers)
+      parameters:
+        - name: atk
+          in: query
+          required: true
+          description: The attacking pokemon (comparing its effectiveness against defending pokemon)
+          schema:
+            type: string
+        - name: def
+          in: query
+          required: true
+          description: The defending pokemon (comparing how effective the attacking pokemon is against it)
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully returned both pokemos base info and damage multipliers among them.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                  data:
+                    $ref: '#/components/schemas/BattleAdvantage'
+        400:
+          description: The atk and def parameters contain incorrect values, or any of them is missing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Failure'
+        404:
+          description: Either of the provided pokemon names does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Failure'
+        500:
+          description: Unexpected error
+  /common:
+    get:
+      description: Given two pokemons, return the moves that they have in common, in the requested language
+      parameters:
+        - name: first
+          in: query
+          required: true
+          description: One of the pokemon to use (name)
+          schema:
+            type: string
+        - name: second
+          in: query
+          required: true
+          description: The other pokemon to use (name)
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: The maximum amount of results to return. Must be a positive integer or zero.
+          schema:
+            type: number
+        - name: Accept-Language
+          in: header
+          required: false
+          description: The language in which to return the moves' names. If not included, defaults to en (English)
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully returned the requested amount of pokemon common moves, in the target language
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - success
+                  data:
+                    $ref: '#/components/schemas/CommonMoves'
+        400:
+          description: The first and second parameters contain incorrect values, or any of them is missing.
+                       The provided limit is not an integer, or it is below zero.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Failure'
+        404:
+          description: Either of the provided pokemon names does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Failure'
+        500:
+          description: Unexpected error
+
+
+
+#  ----- Definitions  ----------------------------------------
+components:
+  schemas:
+    Pokemon:
+      description: An object containing a Pokemon name and types.
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          description: The name of the Pokemon
+        type:
+          type: string
+          description: The type (or types) that a Pokemon belongs to
+    PokemonBattle:
+      type: object
+      required:
+        - multiplier
+        - description
+      properties:
+        multiplier:
+          type: number
+          description: The damage multiplier applied when a pokemon attacks another based on their types
+        description:
+          type: string
+          description: A short text describing how the battle between pokemons went
+    BattleAdvantage:
+      type: object
+      required:
+        - attackingPokemon
+        - defendingPokemon
+        - attack
+        - defense
+      properties:
+        attackingPokemon:
+          $ref: '#/components/schemas/Pokemon'
+        defendingPokemon:
+          $ref: '#/components/schemas/Pokemon'
+        attack:
+          $ref: '#/components/schemas/PokemonBattle'
+        defense:
+          $ref: '#/components/schemas/PokemonBattle'
+      example:
+        firstPokemon:
+          name: "Charizard"
+          type: "[ Fire / Flying ]"
+        secondPokemon:
+          name: "Bulbasaur"
+          type: "[ Grass / Poison ]"
+        attack:
+          multiplier: 2.0,
+          description: "It's super effective! A fairy type attack deals double damage to dark pokemon."
+        defense:
+          multiplier: 0.0
+          description: "Not effective!! A dragon type attack deals no damage to fairy pokemon."
+    CommonMoves:
+      type: object
+      required:
+        - firstPokemon
+        - secondPokemon
+        - movesList
+      properties:
+        firstPokemon:
+          $ref: '#/components/schemas/Pokemon'
+        secondPokemon:
+          $ref: '#/components/schemas/Pokemon'
+        movesList:
+          description: An array containing the requested move names.
+          type: array
+          items:
+            type: string
+      example:
+        firstPokemon:
+          name: "Charizard"
+          type: "[ Fire / Flying ]"
+        secondPokemon:
+          name: "Bulbasaur"
+          type: "[ Grass / Poison ]"
+        moveList:
+          - "Swords Dance"
+          - "Cut"
+          - "Headbutt"
+          - "Body Slam"
+          - "Take Down"
+    Failure:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - failure
+        data:
+          description: The reason for failure
+          type: string
+      example:
+        status: failure
+        data: "Pokemon mewtw does not exist"
+  #  ---- /Definitions  ----------------------------------------
