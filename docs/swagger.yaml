@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: PokemonAPI
-  description: Title
+  description: A REST API for battle ready Pokemón!
   version: 1.0.0
 servers:
   - url: 'http://pokemon-api.ddns.net/v1'
