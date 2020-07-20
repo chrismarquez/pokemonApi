@@ -35,6 +35,8 @@ paths:
                 properties:
                   status:
                     type: string
+                    enum:
+                      - success
                   data:
                     $ref: '#/components/schemas/BattleAdvantage'
         400:
@@ -89,6 +91,8 @@ paths:
                 properties:
                   status:
                     type: string
+                    enum:
+                      - success
                   data:
                     $ref: '#/components/schemas/CommonMoves'
         400:
@@ -201,6 +205,8 @@ components:
       properties:
         status:
           type: string
+          enum:
+            - failure
         data:
           description: The reason for failure
           type: string
